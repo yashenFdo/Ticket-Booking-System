@@ -29,6 +29,14 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * Only active when app.booking.strategy=naive is set explicitly -- the
  * broken strategy is never the default.
+ *
+ * NOTE (as of Phase 4): Seat.version is now mapped with @Version, which is
+ * a table-wide Hibernate concern -- this class's blind write at line ~71
+ * incidentally also gets a version check now, even though it never asks
+ * for one. Re-running this strategy under real concurrency today can throw
+ * an unhandled OptimisticLockingFailureException (500) in addition to the
+ * originally-intended silent duplicate-seat-assignment bug. The pure Phase
+ * 1 behaviour is preserved at the `phase-1-naive-baseline` git tag.
  */
 @Service
 @ConditionalOnProperty(name = "app.booking.strategy", havingValue = "naive")

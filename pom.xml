@@ -43,6 +43,15 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Brings Micrometer's MeterRegistry, needed starting Phase 4 for
+             the retry/exhausted-retry counters, plus the actuator endpoints
+             Phase 7 wires up to Prometheus. Pulling it in once now avoids a
+             second dependency change later for the same underlying need. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Real MySQL driver -- H2 is never used in this project -->
         <dependency>
             <groupId>com.mysql</groupId>
