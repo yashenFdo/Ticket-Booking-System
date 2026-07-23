@@ -20,7 +20,9 @@ public class Booking {
     @Column(name = "event_id", nullable = false)
     private Long eventId;
 
-    @Column(name = "seat_id", nullable = false, unique = true)
+    // Not unique yet -- see V1__init_schema.sql. The naive Phase 1 service
+    // can legitimately create more than one Booking row for the same seat.
+    @Column(name = "seat_id", nullable = false)
     private Long seatId;
 
     @Column(name = "created_at", insertable = false, updatable = false)

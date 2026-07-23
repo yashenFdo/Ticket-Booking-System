@@ -21,11 +21,14 @@ CREATE TABLE seats (
 CREATE TABLE bookings (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     event_id BIGINT NOT NULL,
-    -- A seat can back at most one booking row. This only guarantees no two
-    -- bookings point at the same seat; it does NOT guarantee the total
-    -- booking count stays under capacity -- that guarantee is exactly what
-    -- Phase 1's naive implementation is missing, and what Phases 3-5 add.
-    seat_id BIGINT NOT NULL UNIQUE,
+    -- Deliberately NOT unique yet. Phase 1's naive service is exactly the
+    -- read-check-write race that lets two concurrent requests both see the
+    -- same seat as AVAILABLE and both insert a booking for it -- that is
+    -- what the /audit endpoint's duplicateSeatAssignments metric measures.
+    -- A unique constraint here would turn the race into a DB-level 500
+    -- instead of a silent oversell. Phase 3 adds this constraint back as
+    -- defense-in-depth once locking makes it provably never fire.
+    seat_id BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_bookings_event FOREIGN KEY (event_id) REFERENCES events (id),
     CONSTRAINT fk_bookings_seat FOREIGN KEY (seat_id) REFERENCES seats (id)

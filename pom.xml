@@ -35,6 +35,14 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Bean Validation (Hibernate Validator) for request DTOs, e.g.
+             @NotNull on BookingRequest.eventId -- declarative instead of
+             hand-rolled null checks scattered across controllers. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
         <!-- Real MySQL driver -- H2 is never used in this project -->
         <dependency>
             <groupId>com.mysql</groupId>
