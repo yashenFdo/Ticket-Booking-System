@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -28,6 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 // single-threaded caller can never race with itself.
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// Default strategy is now "pessimistic" (Phase 3); this class specifically
+// exercises the naive baseline, so it opts back into it explicitly.
+@TestPropertySource(properties = "app.booking.strategy=naive")
 class NaiveBookingIntegrationTest {
 
     @Container

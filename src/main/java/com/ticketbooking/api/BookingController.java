@@ -3,7 +3,7 @@ package com.ticketbooking.api;
 import com.ticketbooking.api.dto.BookingRequest;
 import com.ticketbooking.api.dto.BookingResponse;
 import com.ticketbooking.service.BookingResult;
-import com.ticketbooking.service.NaiveBookingService;
+import com.ticketbooking.service.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/bookings")
 public class BookingController {
 
-    private final NaiveBookingService bookingService;
+    private final BookingService bookingService;
 
-    public BookingController(NaiveBookingService bookingService) {
+    public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
 

@@ -6,6 +6,7 @@ import com.ticketbooking.domain.SeatStatus;
 import com.ticketbooking.repository.BookingRepository;
 import com.ticketbooking.repository.EventRepository;
 import com.ticketbooking.repository.SeatRepository;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
  * locking + retry, and Phase 5 with a Redis-based approach. This class stays
  * in the codebase afterwards, unused by any route, purely as the baseline
  * the benchmark table measures everything else against.
+ *
+ * Only active when app.booking.strategy=naive is set explicitly -- the
+ * broken strategy is never the default.
  */
 @Service
-public class NaiveBookingService {
+@ConditionalOnProperty(name = "app.booking.strategy", havingValue = "naive")
+public class NaiveBookingService implements BookingService {
 
     private final EventRepository eventRepository;
     private final SeatRepository seatRepository;
@@ -41,6 +46,7 @@ public class NaiveBookingService {
         this.bookingRepository = bookingRepository;
     }
 
+    @Override
     @Transactional
     public BookingResult book(Long eventId) {
         if (!eventRepository.existsById(eventId)) {

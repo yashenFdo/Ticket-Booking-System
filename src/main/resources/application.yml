@@ -22,3 +22,10 @@ spring:
 
 server:
   port: 8080
+
+app:
+  booking:
+    # Which BookingService implementation backs POST /api/bookings.
+    # One of: naive, pessimistic (more added in Phases 4-5). Benchmarking a
+    # strategy means setting this and restarting the app before running k6.
+    strategy: pessimistic

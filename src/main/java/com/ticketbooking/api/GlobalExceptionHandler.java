@@ -1,5 +1,6 @@
 package com.ticketbooking.api;
 
+import com.ticketbooking.service.BookingConflictException;
 import com.ticketbooking.service.EventNotFoundException;
 import com.ticketbooking.service.NoSeatsAvailableException;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoSeatsAvailableException.class)
     public ResponseEntity<Map<String, Object>> handleNoSeatsAvailable(NoSeatsAvailableException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorBody(ex.getMessage()));
+    }
+
+    @ExceptionHandler(BookingConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleBookingConflict(BookingConflictException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorBody(ex.getMessage()));
     }
 
