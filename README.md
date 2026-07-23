@@ -47,9 +47,10 @@ strategy be benchmarked independently (set the property, restart, run k6).
 
 ## Benchmarks
 
-**Status: not yet run.** This was built without Docker available on the
-dev machine, so nothing here has actually been executed — every number
-below is `TBD` on principle, not estimated. See
+**Status: builds clean, not yet run.** The code compiles and packages into
+a runnable jar (verified locally). Docker is not available on the dev
+machine, so nothing that needs MySQL/Redis has actually executed yet —
+every number below is `TBD` on principle, not estimated. See
 [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for exactly what's needed to
 fill this in for real (`scripts/bench.sh`, which needs `docker`, `mvn`,
 `java`, `k6`, `curl` on `PATH`).

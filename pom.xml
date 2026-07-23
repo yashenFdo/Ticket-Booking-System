@@ -36,7 +36,7 @@
         </dependency>
 
         <!-- Bean Validation (Hibernate Validator) for request DTOs, e.g.
-             @NotNull on BookingRequest.eventId -- declarative instead of
+             @NotNull on BookingRequest.eventId, declarative instead of
              hand-rolled null checks scattered across controllers. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -63,21 +63,21 @@
 
         <!-- Redisson: distributed lock (with lease/watchdog semantics) and
              Lua script execution for the atomic counter. Using the plain
-             `redisson` artifact + a hand-written RedisConfig bean instead of
-             `redisson-spring-boot-starter` so the client construction stays
-             visible in application code rather than behind Boot
-             auto-configuration -- this project's whole point is that every
-             line is explainable. -->
-        <!-- Version pinned to a known-recent release; unverified against
-             Maven Central from this machine (no Maven/internet check
-             performed) -- confirm resolution on first real build. -->
+             redisson artifact plus a hand-written RedisConfig bean instead
+             of redisson-spring-boot-starter, so the client construction
+             stays visible in application code rather than behind Boot
+             auto-configuration; this project's whole point is that every
+             line is explainable.
+             Version pinned to a known-recent release; confirmed present on
+             Maven Central (search.maven.org) but never built against until
+             this local compile check. -->
         <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson</artifactId>
             <version>3.37.0</version>
         </dependency>
 
-        <!-- Real MySQL driver -- H2 is never used in this project -->
+        <!-- Real MySQL driver. H2 is never used in this project. -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
@@ -85,7 +85,7 @@
         </dependency>
 
         <!-- Schema migrations. flyway-mysql is a separate module from flyway-core
-             as of Flyway 10 -- MySQL support was split out of core. -->
+             as of Flyway 10; MySQL support was split out of core. -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
