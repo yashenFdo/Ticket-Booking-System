@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    # GitHub-hosted ubuntu runners have Docker pre-installed, which is what
+    # every Testcontainers-based test here needs (real MySQL/Redis, per the
+    # project's hard rule against mocking anything concurrency-related).
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and run tests
+        # Includes PessimisticBookingConcurrencyTest, OptimisticBookingConcurrencyTest,
+        # RedisLockBookingConcurrencyTest, RedisCounterBookingConcurrencyTest,
+        # and IdempotencyIntegrationTest -- these ARE the regression gate:
+        # any change that reintroduces overselling or breaks idempotency
+        # fails the build here.
+        run: mvn -B verify
