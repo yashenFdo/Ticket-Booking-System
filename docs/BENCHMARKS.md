@@ -4,14 +4,16 @@ Every number in this table comes from a real k6 run against real MySQL + Redis
 (via `docker compose` and the `bench` script). Nothing here is estimated —
 if a row isn't filled in, that phase hasn't been benchmarked yet.
 
-**Status as of Phase 4: not yet run.** This dev machine has no Docker
+**Status as of Phase 5: not yet run.** This dev machine has no Docker
 installed, so `scripts/bench.sh` (needs `docker`, `mvn`, `java`, `k6`, `curl`
 on PATH) has not been executed. To benchmark a strategy: set
-`app.booking.strategy` (naive|pessimistic|optimistic) in `application.yml`
-or via an env var, restart the app, run `scripts/bench.sh`, and paste the
-real output into the table below. Do not fill in numbers any other way.
+`app.booking.strategy` (naive|pessimistic|optimistic|redis-lock|redis-counter)
+in `application.yml` or via an env var, restart the app, run
+`scripts/bench.sh`, and paste the real output into the table below. Do not
+fill in numbers any other way.
 
-`PessimisticBookingConcurrencyTest` and `OptimisticBookingConcurrencyTest`
+`PessimisticBookingConcurrencyTest`, `OptimisticBookingConcurrencyTest`,
+`RedisLockBookingConcurrencyTest`, and `RedisCounterBookingConcurrencyTest`
 (200 threads vs 50 seats each) are written and ready to run once Docker is
 available. Naive/pessimistic benchmark runs should be taken from the
 `phase-1-naive-baseline` / `phase-3-pessimistic-locking` git tags rather

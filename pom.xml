@@ -52,6 +52,22 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Redisson: distributed lock (with lease/watchdog semantics) and
+             Lua script execution for the atomic counter. Using the plain
+             `redisson` artifact + a hand-written RedisConfig bean instead of
+             `redisson-spring-boot-starter` so the client construction stays
+             visible in application code rather than behind Boot
+             auto-configuration -- this project's whole point is that every
+             line is explainable. -->
+        <!-- Version pinned to a known-recent release; unverified against
+             Maven Central from this machine (no Maven/internet check
+             performed) -- confirm resolution on first real build. -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.37.0</version>
+        </dependency>
+
         <!-- Real MySQL driver -- H2 is never used in this project -->
         <dependency>
             <groupId>com.mysql</groupId>
