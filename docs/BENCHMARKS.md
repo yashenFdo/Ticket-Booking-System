@@ -4,7 +4,7 @@ Every number in this table comes from a real k6 run against real MySQL + Redis
 (via `docker compose` and the `bench` script). Nothing here is estimated —
 if a row isn't filled in, that phase hasn't been benchmarked yet.
 
-**Status as of Phase 5: not yet run.** This dev machine has no Docker
+**Status as of Phase 7: not yet run.** This dev machine has no Docker
 installed, so `scripts/bench.sh` (needs `docker`, `mvn`, `java`, `k6`, `curl`
 on PATH) has not been executed. To benchmark a strategy: set
 `app.booking.strategy` (naive|pessimistic|optimistic|redis-lock|redis-counter)

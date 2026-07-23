@@ -1,6 +1,8 @@
 package com.ticketbooking.service;
 
 import com.ticketbooking.repository.EventRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,13 +39,19 @@ public class RedisDistributedLockBookingService implements BookingService {
     private final RedissonClient redissonClient;
     private final EventRepository eventRepository;
     private final OptimisticSeatBooker seatBooker;
+    private final Timer lockWaitTimer;
 
     public RedisDistributedLockBookingService(RedissonClient redissonClient,
                                                EventRepository eventRepository,
-                                               OptimisticSeatBooker seatBooker) {
+                                               OptimisticSeatBooker seatBooker,
+                                               MeterRegistry meterRegistry) {
         this.redissonClient = redissonClient;
         this.eventRepository = eventRepository;
         this.seatBooker = seatBooker;
+        this.lockWaitTimer = Timer.builder("booking.lock.wait")
+                .description("Time spent acquiring a seat lock before booking")
+                .tag("strategy", "redis-lock")
+                .register(meterRegistry);
     }
 
     @Override
@@ -54,11 +62,14 @@ public class RedisDistributedLockBookingService implements BookingService {
 
         RLock lock = redissonClient.getLock("booking:lock:event:" + eventId);
         boolean acquired;
+        Timer.Sample sample = Timer.start();
         try {
             acquired = lock.tryLock(WAIT_TIME_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new BookingConflictException(eventId, e);
+        } finally {
+            sample.stop(lockWaitTimer);
         }
 
         if (!acquired) {

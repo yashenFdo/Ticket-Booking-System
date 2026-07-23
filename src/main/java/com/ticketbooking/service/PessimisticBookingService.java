@@ -6,6 +6,8 @@ import com.ticketbooking.domain.SeatStatus;
 import com.ticketbooking.repository.BookingRepository;
 import com.ticketbooking.repository.EventRepository;
 import com.ticketbooking.repository.SeatRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
@@ -32,13 +34,19 @@ public class PessimisticBookingService implements BookingService {
     private final EventRepository eventRepository;
     private final SeatRepository seatRepository;
     private final BookingRepository bookingRepository;
+    private final Timer lockWaitTimer;
 
     public PessimisticBookingService(EventRepository eventRepository,
                                       SeatRepository seatRepository,
-                                      BookingRepository bookingRepository) {
+                                      BookingRepository bookingRepository,
+                                      MeterRegistry meterRegistry) {
         this.eventRepository = eventRepository;
         this.seatRepository = seatRepository;
         this.bookingRepository = bookingRepository;
+        this.lockWaitTimer = Timer.builder("booking.lock.wait")
+                .description("Time spent acquiring a seat lock before booking")
+                .tag("strategy", "pessimistic")
+                .register(meterRegistry);
     }
 
     @Override
@@ -49,6 +57,7 @@ public class PessimisticBookingService implements BookingService {
         }
 
         List<Seat> locked;
+        Timer.Sample sample = Timer.start();
         try {
             locked = seatRepository.lockNextAvailableSeat(eventId, SeatStatus.AVAILABLE, PageRequest.of(0, 1));
         } catch (PessimisticLockingFailureException ex) {
@@ -56,6 +65,8 @@ public class PessimisticBookingService implements BookingService {
             // long enough that we gave up waiting. A 409 tells the client
             // to retry, rather than a 500 or an indefinite hang.
             throw new BookingConflictException(eventId, ex);
+        } finally {
+            sample.stop(lockWaitTimer);
         }
 
         if (locked.isEmpty()) {

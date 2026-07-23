@@ -52,6 +52,15 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Exports the MeterRegistry's metrics in Prometheus text format at
+             /actuator/prometheus. Without this, the counters/timers/gauge
+             registered since Phase 4 exist in-process but nothing external
+             can scrape them. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- Redisson: distributed lock (with lease/watchdog semantics) and
              Lua script execution for the atomic counter. Using the plain
              `redisson` artifact + a hand-written RedisConfig bean instead of

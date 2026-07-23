@@ -31,6 +31,22 @@ server:
 app:
   booking:
     # Which BookingService implementation backs POST /api/bookings.
-    # One of: naive, pessimistic (more added in Phases 4-5). Benchmarking a
-    # strategy means setting this and restarting the app before running k6.
+    # One of: naive, pessimistic, optimistic, redis-lock, redis-counter.
+    # Benchmarking a strategy means setting this and restarting the app
+    # before running k6.
     strategy: pessimistic
+  metrics:
+    # Which event the booking.oversold gauge continuously reports on. The
+    # seed migration creates exactly one event, so this defaults to its id.
+    tracked-event-id: 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Only health and prometheus -- least exposure needed for Phase 7's
+        # scraping, not the full actuator surface.
+        include: health,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
