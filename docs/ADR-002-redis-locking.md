@@ -90,6 +90,40 @@ transaction, where MySQL's own transactional guarantees are the actual
 backstop if the Redis lock's exclusivity is ever violated. Worth knowing
 the gap exists even when choosing not to close it.
 
+## A real finding: the atomic counter concentrates contention it doesn't remove
+
+The counter strategy's Lua script only gates *how many* requests get
+admitted -- it says nothing about *which* seat row each admitted request
+should write to. Every admitted request still calls the same unguarded
+"pick the lowest available seat_number" read (`OptimisticSeatBooker`,
+shared with the optimistic strategy) and relies on `Seat.version` to
+reject a stale write, retried with the same bounded backoff-and-jitter
+`OptimisticBookingService` uses.
+
+The first real run of `RedisCounterBookingConcurrencyTest` against actual
+MySQL + Redis (200 threads, 50 seats) showed only 38/50 succeeding --
+noticeably worse than the pure optimistic strategy's 48/50 under the exact
+same load. The reason: pure optimistic locking naturally staggers
+contention, since most of 200 requests fail the early "is anything still
+available" check rather than ever reaching the seat-write race. The Redis
+gate instead admits close to `capacity` requests in one near-simultaneous
+burst (Redis processes the Lua script fast enough that most concurrent
+callers get through before any of them finishes booking), so all ~50
+admitted requests hit the same DB-level version-conflict race *at once* --
+a harder contention pattern than optimistic locking sees on its own,
+with the same bounded retry budget to resolve it.
+
+This is not a bug to "fix" by cranking retry counts up arbitrarily -- doing
+that would just mask the tradeoff rather than measure it. It's the real
+cost of decoupling admission control from seat assignment: a cheap, fast
+gate in exchange for a harder scrum among whoever gets through it. Both
+`OptimisticBookingConcurrencyTest` and `RedisCounterBookingConcurrencyTest`
+assert safety (never oversold, never duplicated) rather than "every
+admitted/attempting request eventually wins," because neither strategy
+actually guarantees the latter under enough contention -- only
+pessimistic locking and the Redis distributed lock do, since a waiter
+there never gives up, it just blocks.
+
 ## Decision
 
 Keep both Redis strategies for benchmarking, with the single-node lock as

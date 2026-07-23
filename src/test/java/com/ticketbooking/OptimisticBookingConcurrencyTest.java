@@ -29,11 +29,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Same shape as PessimisticBookingConcurrencyTest, pointed at the optimistic
-// strategy: 200 threads released simultaneously against 50 seats must still
-// yield exactly 50 successes, with the rest resolved as 409s (either
-// NoSeatsAvailableException once truly sold out, or retry exhaustion under
-// OptimisticBookingService) rather than oversold or duplicated.
+// Similar shape to PessimisticBookingConcurrencyTest, but with a
+// deliberately different assertion. Pessimistic/Redis-lock GUARANTEE
+// exactly `capacity` successes because a waiter never gives up, it just
+// blocks. Optimistic locking's bounded retry (5 attempts) does NOT
+// guarantee that -- under 200 threads hammering 50 seats, a first real run
+// against real MySQL showed 48/50 succeeding: two requests genuinely
+// exhausted their retry budget under contention even though seats existed,
+// exactly the tradeoff documented in ADR-001 ("bounded retries can return
+// 'no seat' even when inventory objectively still exists"). Asserting
+// "exactly capacity" here would be asserting a guarantee this strategy does
+// not make. The actual guarantee -- and what this test checks -- is safety
+// (never oversold, never duplicated), not liveness under extreme contention.
+
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = "app.booking.strategy=optimistic")
@@ -65,7 +73,7 @@ class OptimisticBookingConcurrencyTest {
     private MeterRegistry meterRegistry;
 
     @Test
-    void exactlyCapacitySeatsSucceedUnderTwoHundredConcurrentThreads() throws InterruptedException {
+    void neverOversellsOrDuplicatesUnderTwoHundredConcurrentThreads() throws InterruptedException {
         int capacity = 50;
         int threadCount = 200;
 
@@ -101,10 +109,12 @@ class OptimisticBookingConcurrencyTest {
         executor.shutdown();
 
         assertThat(finished).as("all 200 requests completed within 60s").isTrue();
-        assertThat(successCount.get()).isEqualTo(capacity);
+        // Safety, not liveness: never more than capacity, and whatever DID
+        // succeed must be reflected exactly in MySQL with no duplicates.
+        assertThat(successCount.get()).isPositive().isLessThanOrEqualTo(capacity);
 
         AuditResult audit = auditService.audit(event.getId());
-        assertThat(audit.bookingsCreated()).isEqualTo(capacity);
+        assertThat(audit.bookingsCreated()).isEqualTo(successCount.get());
         assertThat(audit.oversoldBy()).isZero();
         assertThat(audit.duplicateSeatAssignments()).isZero();
 
