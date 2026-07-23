@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: ticket-booking-system
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/ticket_booking
+    username: ticket_booking
+    password: ticket_booking
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    # Flyway is the only source of schema truth. If an entity mapping drifts
+    # from the migrations, the app fails fast at boot instead of Hibernate
+    # silently altering the schema.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
