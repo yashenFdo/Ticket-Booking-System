@@ -3,6 +3,7 @@ package com.ticketbooking.service;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +17,18 @@ import java.util.Collections;
  * "check remaining > 0, then decrement" against a single Redis key, with no
  * external locking needed because the whole check-and-decrement runs as one
  * indivisible Redis operation.
+ *
+ * Gated identically to its only consumer, RedisAtomicCounterBookingService.
+ * This bean depends on RedissonClient, and RedissonClient connects to Redis
+ * eagerly at construction (see RedisConfig's @Lazy comment) -- without this
+ * same @ConditionalOnProperty gate, this bean would be created in every
+ * Spring context regardless of strategy, forcing that eager connection
+ * attempt everywhere and defeating the whole point of @Lazy on
+ * RedissonClient. (This exact bug shipped once already: every non-redis-counter
+ * test context failed to boot because of it.)
  */
 @Component
+@ConditionalOnProperty(name = "app.booking.strategy", havingValue = "redis-counter")
 class RedisAvailabilityCounter {
 
     private static final String DECREMENT_SCRIPT = loadScript();
